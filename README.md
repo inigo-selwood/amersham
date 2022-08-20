@@ -1,5 +1,7 @@
 # Amersham
 
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/inigo-selwood/a15864cab2eed694c754703ad4b73181/raw/test.json)
+
 **Amersham:** The name of a London Underground station which alliterates with "argument parser"
 
 ## Motivation

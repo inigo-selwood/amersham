@@ -29,3 +29,15 @@ jobs:
 
       - name: Run Pytest
         run: python3 -m pytest ./test
+
+      - name: Generate coverage badge
+        uses: schneegans/dynamic-badges-action@v1.4.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: a15864cab2eed694c754703ad4b73181
+          filename: amersham-coverage-badge.json
+          label: coverage
+          message: 88%
+          color: green
+          style: flat
+          logo: github
