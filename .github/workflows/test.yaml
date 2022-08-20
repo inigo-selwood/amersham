@@ -48,9 +48,6 @@ jobs:
             COLOR=red
           fi
 
-          echo "::set-env name=COVERAGE::$COVERAGE"
-          echo "::set-env name=COLOR::$COLOR"
-
           echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
           echo "COLOR=$COLOR" >> $GITHUB_ENV
 
