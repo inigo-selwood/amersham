@@ -19,7 +19,7 @@ Amersham takes care of both with minimal boilerplate.
 ## Installation
 
 ```
-user:app$ git clone git@github.com:inigo-selwood/amersham.git
+user:app$ pip3 install amersham
 ```
 
 ## Quick Start
