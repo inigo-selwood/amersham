@@ -61,7 +61,7 @@ jobs:
           gistID: a15864cab2eed694c754703ad4b73181
           filename: amersham-coverage-badge.json
           label: coverage
-          message: {{ env.COVERAGE }}%
-          color: {{ env.COLOR }}
+          message: ${{ env.COVERAGE }}%
+          color: ${{ env.COLOR }}
           style: flat
           namedLogo: github
