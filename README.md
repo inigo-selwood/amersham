@@ -90,3 +90,9 @@ Run the parser
 if __name__ == "__main__":
     parser.run(sys.argv[1:])
 ```
+
+# Future Improvements
+
+- [ ] Type validation for `bool`, `int`, `str`, `list`, and file-like objects
+- [ ] Condensed usage and help messages for single-command parsers
+- [ ] Improved instance hints for `list` flags
