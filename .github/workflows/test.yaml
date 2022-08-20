@@ -1,0 +1,28 @@
+name: Test
+
+on:
+
+  push:
+    branches:
+    - '**'
+    paths:
+    - '**.py'
+    - '**.yaml'
+
+jobs:
+
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+          architecture: x64
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run Pytest
+        run: python3 -m pytest ./test
