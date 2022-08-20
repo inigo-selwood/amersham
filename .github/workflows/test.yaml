@@ -40,4 +40,4 @@ jobs:
           message: 88%
           color: green
           style: flat
-          logo: github
+          namedLogo: github
