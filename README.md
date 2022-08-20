@@ -13,7 +13,7 @@ Amersham takes care of both with minimal boilerplate.
 
 ## Installation
 
-```
+``` bash
 git clone git@github.com:inigo-selwood/amersham.git
 ```
 
@@ -21,7 +21,7 @@ git clone git@github.com:inigo-selwood/amersham.git
 
 Import
 
-```
+``` python
 import sys
 
 from amersham import Parser, Flag, Parameter
@@ -29,13 +29,13 @@ from amersham import Parser, Flag, Parameter
 
 Create a parser
 
-```
+``` python
 parser = Parser("parser", "a parser")
 ```
 
 Create a command
 
-```
+``` python
 @parser.command("a command",
         flag = Flag("a flag"),
         parameter = Parameter("a parameter))
@@ -51,7 +51,7 @@ Take away the decorator, and it's just a normal function. The signature stays de
 
 Run the parser
 
-```
+``` python
 if __name__ == "__main__":
     parser.run(sys.argv[1:])
 ```
@@ -62,7 +62,7 @@ Amersham generates descriptive help messages, so you don't have to.
 
 For the application:
 
-```
+``` bash
 user:app$ python3 app --help
 usage
   app [--help] {command} ...
@@ -76,7 +76,7 @@ commands
 
 And for each command:
 
-```
+``` bash
 user:app$ python3 app command --help
 usage
   app command [--help] {command} ...
@@ -98,7 +98,7 @@ Amersham infers the names of your commands, arguments, and flag aliases. You can
 
 Rename a command:
 
-```
+``` python
 @parser.command("a command", name="a-different-name")
 def command():
     pass
@@ -106,7 +106,7 @@ def command():
 
 Or a flag/parameter:
 
-```
+``` python
 @parser.command("a command",
         flag = Flag("a flag", name="flag-name"),
         parameter = Parameter("a parameter, name="parameter-name"))
