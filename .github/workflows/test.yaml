@@ -51,6 +51,9 @@ jobs:
           echo "::set-env name=COVERAGE::$COVERAGE"
           echo "::set-env name=COLOR::$COLOR"
 
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "COLOR=$COLOR" >> $GITHUB_ENV
+
       - name: Generate coverage badge
         uses: schneegans/dynamic-badges-action@v1.4.0
         with:
@@ -58,7 +61,7 @@ jobs:
           gistID: a15864cab2eed694c754703ad4b73181
           filename: amersham-coverage-badge.json
           label: coverage
-          message: ${COVERAGE}%
-          color: ${COLOR}
+          message: {{ env.COVERAGE }}%
+          color: {{ env.COLOR }}
           style: flat
           namedLogo: github
