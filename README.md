@@ -13,8 +13,8 @@ Amersham takes care of both with minimal boilerplate.
 
 ## Installation
 
-``` bash
-git clone git@github.com:inigo-selwood/amersham.git
+```
+user:app$ git clone git@github.com:inigo-selwood/amersham.git
 ```
 
 ## Quick Start
@@ -62,7 +62,7 @@ Amersham generates descriptive help messages, so you don't have to.
 
 For the application:
 
-``` bash
+```
 user:app$ python3 app --help
 usage
   app [--help] {command} ...
@@ -76,7 +76,7 @@ commands
 
 And for each command:
 
-``` bash
+```
 user:app$ python3 app command --help
 usage
   app command [--help] {command} ...
