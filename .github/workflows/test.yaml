@@ -28,7 +28,28 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run Pytest
-        run: python3 -m pytest ./test
+        run: |
+          COVERAGE=`python3 -m pytest --cov=amersham ./test/ | \
+            grep -oE "[0-9]+%" | \
+            tail -1 | \
+            sed 's/.$//'1`
+          
+          if (( $COVERAGE >= 95 )); then
+            COLOR=brightgreen
+          elif (( $COVERAGE >= 90 )); then
+            COLOR=green
+          elif (( $COVERAGE >= 80 )); then
+            COLOR=yellowgreen
+          elif (( $COVERAGE >= 70 )); then
+            COLOR=yellow
+          elif (( $COVERAGE >= 60 )); then
+            COLOR=orange
+          else
+            COLOR=red
+          fi
+
+          echo "::set-env name=COVERAGE::$COVERAGE"
+          echo "::set-env name=COLOR::$COLOR"
 
       - name: Generate coverage badge
         uses: schneegans/dynamic-badges-action@v1.4.0
@@ -37,7 +58,7 @@ jobs:
           gistID: a15864cab2eed694c754703ad4b73181
           filename: amersham-coverage-badge.json
           label: coverage
-          message: 88%
-          color: green
+          message: ${COVERAGE}%
+          color: ${COLOR}
           style: flat
           namedLogo: github
