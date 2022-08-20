@@ -28,8 +28,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run Pytest
+        working-directory: ./source
         run: |
-          COVERAGE=`python3 -m pytest --cov=amersham ./test/ | \
+          COVERAGE=`python3 -m pytest --cov=amersham ../test/ | \
             grep -oE "[0-9]+%" | \
             tail -1 | \
             sed 's/.$//'1`
