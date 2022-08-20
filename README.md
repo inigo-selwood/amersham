@@ -2,7 +2,7 @@
 
 <p align="center">
     <img src="https://github.com/inigo-selwood/amersham/actions/workflows/test.yaml/badge.svg?event=push" alt="Test" />
-    <img src="(https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/inigo-selwood/a15864cab2eed694c754703ad4b73181/raw/b572b5120488b2f80bd3cc9ade3931db4d7d86ad/amersham-coverage-badge.json" alt="Coverage" />
+    <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/inigo-selwood/a15864cab2eed694c754703ad4b73181/raw/b572b5120488b2f80bd3cc9ade3931db4d7d86ad/amersham-coverage-badge.json" alt="Coverage" />
 </p>
 
 **Amersham:** The name of a London Underground station which alliterates with "argument parser"
