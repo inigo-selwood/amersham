@@ -1,7 +1,6 @@
-from command import Command
-from flag import Flag
+from .command import Command
 
-import table
+from .table import serialize as table_serialize
 
 
 class Parser:
@@ -24,11 +23,13 @@ class Parser:
 
         result += f"\n\ndescription\n  {self.description}"
 
+        result += f"\n\nflags\n  --help  -h  displays this message"
+
         if self._commands:
             command_table = []
             for command in self._commands:
                 command_table.append([command.name, command.description])
-            commands = table.serialize(command_table, "  ", "\n  ")
+            commands = table_serialize(command_table, "  ", "\n  ")
             result += f"\n\ncommands\n  {commands}"
         
         return result
@@ -43,11 +44,12 @@ class Parser:
 
         result = f"usage\n  {self.name} [--help]"
 
-        command_names = []
-        for command in self._commands:
-            command_names.append(command.name)
-        commands = ", ".join(command_names)
-        result += f" {{{commands}}} ..."
+        if self._commands:
+            command_names = []
+            for command in self._commands:
+                command_names.append(command.name)
+            commands = ", ".join(command_names)
+            result += f" {{{commands}}} ..."
         
         return result
     
@@ -55,7 +57,6 @@ class Parser:
         """ Prints usage and an error message """
 
         print(f"{self._usage()}\n\n{message}")
-        exit(1)
     
     def _get_command(self, name: str):
         """ Gets a command
@@ -74,7 +75,7 @@ class Parser:
                 return command
         return None
 
-    def command(self, description: str, **arguments):
+    def command(self, description: str, name: str = None, **arguments):
         """ Wrapper for registering commands
 
         Registers the command with the parser
@@ -91,7 +92,8 @@ class Parser:
             command = Command(description, 
                     self.name,
                     functor, 
-                    arguments)
+                    arguments,
+                    command_name=name)
             self._commands.append(command)
             return functor
             
@@ -121,26 +123,26 @@ class Parser:
         """
 
         if not arguments:
-            self._fail("expected a command")
+            return self._fail("expected a command")
         
         # Check for help
         command_name = arguments[0]
         if command_name == "--help" or command_name == "-h":
             if len(arguments) != 1:
-                self._fail(f"'{command_name}' expects no arguments")
+                return self._fail(f"'{command_name}' expects no arguments")
             
             print(self._help())
             return None
         
         # Make sure command it's a potential command
         elif command_name[0] == '-':
-            self._fail(f"unexpected flag '{command_name}'")
+            return self._fail(f"unexpected flag '{command_name}'")
         
         # Fetch command
         command_name = command_name
         command = self._get_command(command_name)
         if not command:
-            self._fail(f"unrecognized command '{command_name}'")
+            return self._fail(f"unrecognized command '{command_name}'")
         
         return command._parse(arguments[1:])
         

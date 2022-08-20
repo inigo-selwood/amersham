@@ -55,13 +55,15 @@ def serialize(table: list,
 
         columns = []
         for column_index in range(column_count):
-
             value = row[column_index]
             width = len(value)
 
-            padding = " " * (widths[column_index] - width - 1)
+            padding = ""
+            if column_index + 1 < column_count:
+                padding = " " * (widths[column_index] - width)
             columns.append(value + padding)
-        
+                
         rows.append(delimiter.join(columns))
     
     return newline.join(rows)
+    

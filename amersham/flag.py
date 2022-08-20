@@ -8,15 +8,17 @@ class Flag:
             name: str = None, 
             alias: str = None, 
             value_count: int = None):
+        
+        if name:
+            name = name.replace(" ", "-")
+            name = name.replace("_", "-")
+            name = name.lower()
 
         self.description = description
 
         self.name = name
         self.alias = alias
         self.value_count = value_count
-
-        self._parameters = []
-        self._flags = []
     
     def parse(flag: str) -> tuple:
         """ Parses a flag's fields
@@ -47,13 +49,9 @@ class Flag:
         token_count = len(tokens)
         if token_count > 2:
             raise Exception(f"multiple '=' instances in '{flag}'")
-
-        # Check tokens populated
-        identifier = tokens[0]
-        if not identifier:
-            raise Exception(f"empty name token in '{flag}'")
         
         # Evaluate flag, verbose or aliased
+        identifier = tokens[0]
         is_alias = None
         name = None
         if len(identifier) > 2 and identifier[:2] == "--":
@@ -67,11 +65,17 @@ class Flag:
                 raise Exception("invalid flag '-'")
             name = identifier[1:]
         
-        # Check values non-empty
+        # Check value, if present
         value = tokens[1] if len(tokens) == 2 else None
-        if value:
-            for value in value.split(","):
-                if len(value) == 0:
+        if value is not None and not value:
+            raise Exception(f"empty value in '{flag}'")
+
+        # Split value tokens, if present
+        if value and "," in value:
+
+            value = value.split(",")
+            for token in value:
+                if len(token) == 0:
                     raise Exception(f"empty value token in '{flag}'")
         
         return (name, is_alias, value)

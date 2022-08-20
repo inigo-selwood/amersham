@@ -1,8 +1,8 @@
 import inspect
 
-import table
+from .table import serialize as table_serialize
 
-from flag import Flag
+from .flag import Flag
 
 
 class Parameter:
@@ -61,7 +61,7 @@ class Command:
         self._flags = []
         self._parameters = []
 
-        flag_names = []
+        reserved_aliases = []
         parameter_names = []
 
         signature = inspect.signature(functor)
@@ -83,25 +83,21 @@ class Command:
                 # Check flag has default value
                 if (argument.default == inspect.Parameter.empty and 
                         not argument.annotation == bool):
-                    message = f"flag '{argument_name}' has no default value"
-                    raise Exception(message)
-
-                # Check flag not already registered
-                if argument_name in flag_names:
-                    message = f"flag '{argument_name}' already registered"
+                    message = f"'--{argument_name}' has no default value"
                     raise Exception(message)
                 
                 # Evaluate alias; if none given, take slices of name until 
                 # something unique resolved
                 alias = definition.alias
                 end = 1
-                while not alias or alias in flag_names:
+                while not alias or alias in reserved_aliases:
                     alias = flag_name[:end]
                     end += 1
 
                     if end == len(flag_name):
                         message = f"no unique alias for '--{definition.name}'"
                         raise Exception(message)
+                reserved_aliases.append(alias)
                 
                 # Work out expected value count
                 value_count = definition.value_count
@@ -127,18 +123,13 @@ class Command:
                 parameter_name = definition.name
                 if not parameter_name:
                     parameter_name = argument_name
-                
-                # Check parameter not already registered
-                if parameter_name in parameter_names:
-                    message = f"parameter '{parameter_name}' already defined"
-                    raise Exception(message)
-                
+                            
                 parameter = Parameter(definition.description, 
                         name=parameter_name)
                 self.add_parameter(parameter)
 
             else:
-                message = f"'{argument_name}' neither Flag nor Parameter type"
+                message = f"'{argument_name}' definition not Flag or Parameter"
                 raise Exception(message)
     
     def _usage(self) -> str:
@@ -152,7 +143,8 @@ class Command:
         result = f"usage\n  {self.parser_name} {self.name} [--help]"
 
         for flag in self._flags:
-            result += f" [--{flag.name}]"
+            hint = "=_" if flag.value_count else ""
+            result += f" [--{flag.name}{hint}]"
 
         for parameter in self._parameters:
             result += f" {parameter.name.upper()}"
@@ -172,7 +164,9 @@ class Command:
         result += f"\n\ndescription\n  {self.description}"
 
         if self._flags:
-            flag_table = []
+            flag_table = [
+                ["--help", "-h", "displays this message"]
+            ]
             for flag in self._flags:
                 row = [
                     f"--{flag.name}", 
@@ -180,14 +174,14 @@ class Command:
                     flag.description
                 ]
                 flag_table.append(row)
-            flags = table.serialize(flag_table, "  ", "\n  ")
+            flags = table_serialize(flag_table, "  ", "\n  ")
             result += f"\n\nflags\n  {flags}"
 
         if self._parameters:
             parameter_table = []
             for parameter in self._parameters:
                 parameter_table.append([parameter.name, parameter.description])
-            parameters = table.serialize(parameter_table, "  ", "\n  ")
+            parameters = table_serialize(parameter_table, "  ", "\n  ")
             result += f"\n\nparameters\n  {parameters}"
         
         return result
@@ -232,7 +226,6 @@ class Command:
         """ Prints usage and an error message """
 
         print(f"{self._usage()}\n\n{message}")
-        exit(1)
 
     def _parse(self, arguments: list) -> any:
         """ Parses arguments for the command, runs the functor
@@ -258,7 +251,7 @@ class Command:
         # Check for help
         if arguments and (arguments[0] == "--help" or arguments[0] == "-h"):
             if len(arguments) != 1:
-                self._fail(f"'{arguments[0]}' expects no arguments")
+                return self._fail(f"'{arguments[0]}' expects no arguments")
             
             print(self._help())
             return None
@@ -280,15 +273,16 @@ class Command:
                 try:
                     name, is_alias, values = Flag.parse(argument)
                 except Exception as parse_error:
-                    self._fail(parse_error)
+                    return self._fail(parse_error)
                 
                 # Fetch flag, check not given already
                 flag = self._get_flag(name, is_alias)
                 if not flag:
                     identifier = f"-{name}" if is_alias else f"--{name}"
-                    self._fail(f"unexpected flag '{identifier}'")
+                    return self._fail(f"unexpected flag '{identifier}'")
                 elif flag.name in defined_flags:
-                    self._fail(f"'--{flag.name}' defined multiple times")
+                    message = f"'--{flag.name}' defined multiple times"
+                    return self._fail(message)
                 defined_flags.append(flag)
 
                 # Verify value count
@@ -299,10 +293,10 @@ class Command:
                     value_count = 1
 
                 if not flag.value_count and values:
-                    self._fail(f"'--{flag.name}' expects no values")
+                    return self._fail(f"'--{flag.name}' expects no values")
                 elif ((not value_count and flag.value_count == -1) or
                         (value_count != flag.value_count)):
-                    self._fail(f"wrong value count for '--{flag.name}'")
+                    return self._fail(f"wrong value count for '--{flag.name}'")
 
                 # Evaluate value; trim if list, or just provide bool
                 value = None
@@ -319,7 +313,7 @@ class Command:
                 
                 # Check parameter expected
                 if parameter_index == parameter_count:
-                    self._fail(f"unexpected parameter '{argument}'")
+                    return self._fail(f"unexpected parameter '{argument}'")
                 
                 name = self._parameters[parameter_index].name
                 parameter_index += 1
@@ -333,7 +327,7 @@ class Command:
                 parameter_names.append(parameter.name)
             parameters = ", ".join(parameter_names)
         
-            self._fail(f"missing parameters ({parameters})")
+            return self._fail(f"missing parameters ({parameters})")
         
         # Provide default values for all boolean flags
         for flag in self._flags:
