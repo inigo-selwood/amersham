@@ -1,14 +1,10 @@
-from amersham import Parser, Command
+from amersham import Parser, ParseException
 
 
 def test_parser_help():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
-    def help():
-        return parser.help()
-    parser.help_callback = help
-
-    # With one command, no details
+    # With one command, no description
     @parser.command()
     def command(parameter: str, flag = ""):
         pass
@@ -19,14 +15,14 @@ def test_parser_help():
 
 flags
   --help  -h          displays this message
-  --flag  -f  string
+  --flag      string
 
 parameters
   PARAMETER  string"""
-    assert parser.run(["--help"]) == help_message
+    assert parser.help() == help_message
 
-    # With two commands, and some details
-    @parser.command(detail="another command")
+    # With two commands, and description
+    @parser.command(description="another command")
     def command_2():
         pass
 
@@ -40,30 +36,38 @@ flags
 commands
   command
   command-2  another command"""
-    assert parser.run(["--help"]) == help_message
+    assert parser.help() == help_message
+
+    # Trailing garbage after "--help"
+    for help_string in ["--help", "-h"]:
+        try:
+            arguments = [help_string, "garbage"]
+            parser.run(arguments)
+        except ParseException as error:
+            assert f"{error}" == f"'{help_string}' followed by other arguments"
+        else:
+            assert False
 
 
 def test_command_help():
-    parser = Parser("test")
-
-    def help(command: Command):
-        return command.help()
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command(name="command",
-            detail="a command",
-            help_callback=help,
+            description="a command",
             parameter={
-                "detail": "a parameter",
+                "description": "a parameter",
             },
-            flag={
-                "detail": "a flag",
+            _flag={
+                "name": "flag",
+                "alias": "f",
+                "description": "a flag",
             })
-    def callback(parameter: str, flag = ""):
+    def callback(parameter: str, _flag = ""):
         pass
 
     help_message = \
 """usage
-  test command [--help] [--flag=] PARAMETER
+  test [--help] [--flag=] PARAMETER
 
 description
   a command
@@ -73,5 +77,15 @@ flags
   --flag  -f  string  a flag
 
 parameters
-  parameter  string  a parameter"""
-    assert parser.run(["--help"]) == help_message
+  PARAMETER  string  a parameter"""
+    assert parser.get_command("command").help(root=True) == help_message
+
+    # Trailing garbage after "--help"
+    for help_string in ["--help", "-h"]:
+        try:
+            arguments = [help_string, "garbage"]
+            parser.get_command("command").run(arguments, root=True)
+        except ParseException as error:
+            assert f"{error}" == f"'{help_string}' followed by other arguments"
+        else:
+            assert False

@@ -2,7 +2,7 @@ from amersham import Parser
 
 
 def test_parser_usage():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     # With one command
     @parser.command()
@@ -20,7 +20,7 @@ def test_parser_usage():
 
 
 def test_command_usage():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter: str, flag = ""):
@@ -28,4 +28,4 @@ def test_command_usage():
 
     usage = """usage
   test [--help] [--flag=] PARAMETER"""
-    assert parser.get_command("command") == usage
+    assert parser.get_command("command").usage(root=True) == usage

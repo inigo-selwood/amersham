@@ -4,4 +4,4 @@ class ParseException(Exception):
         self.message = message
 
     def __str__(self):
-        pass
+        return self.message

@@ -1,8 +1,28 @@
 from amersham import Parser, ParseException
 
 
+def test_parameter():
+
+    # Multiple definition
+    parser = Parser("test", raise_exceptions=True)
+
+    try:
+        overrides = {
+            "parameter_2": {
+                "name": "parameter",
+            }
+        }
+        @parser.command(**overrides)
+        def command(parameter, parameter_2):
+            pass
+    except Exception as error:
+        assert f"{error}" == "'parameter' already registered in 'command'"
+    else:
+        assert False
+
+
 def test_parameter_untyped():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter, other_parameter):
@@ -23,7 +43,7 @@ def test_parameter_untyped():
     try:
         parser.run([])
     except ParseException as exception:
-        message = "expected 'parameter', 'other-parameter"
+        message = "expected 'parameter', 'other-parameter'"
         assert exception.__str__() == message
     else:
         assert False
@@ -38,7 +58,7 @@ def test_parameter_untyped():
 
 
 def test_parameter_string():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter: str):
@@ -49,7 +69,7 @@ def test_parameter_string():
 
 
 def test_parameter_integer():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter: int):
@@ -70,7 +90,7 @@ def test_parameter_integer():
 
 
 def test_parameter_boolean():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter: bool):
@@ -84,7 +104,7 @@ def test_parameter_boolean():
     # Present, false
     for value in ["0", "no", "N", "n", "false"]:
         result = parser.run([value])
-        assert not result == False
+        assert result == False
     
     # Present, invalid
     try:
@@ -97,7 +117,7 @@ def test_parameter_boolean():
 
 
 def test_parameter_list():
-    parser = Parser("test")
+    parser = Parser("test", raise_exceptions=True)
 
     @parser.command()
     def command(parameter: list):
