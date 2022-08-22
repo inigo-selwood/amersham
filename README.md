@@ -63,3 +63,45 @@ flags
 parameters
   PARAMETER  string
 ```
+
+## Advanced Usage
+
+### More Descriptive Help Messages
+
+Add some context to our command and arguments
+
+```python
+overrides = {
+    "description": "a command",
+
+    "parameter": {
+        "description": "a parameter",
+    },
+    "flag": {
+        "description": "a flag",
+        "alias": "f",
+    }
+}
+
+@parser.command(**overrides)
+def command(parameter, flag = ""):
+    pass
+```
+
+And see the results
+
+```
+user:~$ python3 app.py --help
+usage
+  app.py [--help] [--flag] PARAMETER
+
+description
+  a command
+
+flags
+  --help  -h          displays this message
+  --flag      string  a flag
+
+parameters
+  PARAMETER  string  a parameter
+```
