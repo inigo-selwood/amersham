@@ -1,148 +1,136 @@
 from .command import Command
-
 from .table import serialize as table_serialize
+from .parse_exception import ParseException
 
 
 class Parser:
 
-    def __init__(self, name: str, description: str):
+    def __init__(self, 
+            name: str, 
+            description: str = "", 
+            raise_exceptions: bool = False):
+        
         self.name = name
+
         self.description = description
+        self.raise_exceptions = raise_exceptions
 
-        self._commands = []
+        self.commands = []
     
-    def _help(self) -> str:
-        """ Creates a help message for the parser
+    def command(self, 
+            name = "", 
+            description = "", 
+            help_callback: callable = None,
+            raise_exceptions = False,
+            **overrides) -> callable:
+        
+        def wrapper(functor: callable) -> callable:
+            command = Command.construct(functor, 
+                    self.name,
+                    overrides,
+                    name=name, 
+                    description=description, 
+                    raise_exceptions=raise_exceptions)
+            self.add_command(command)
 
-        Returns
-        -------
-        help: the help message
-        """
+            return functor
+        return wrapper
+    
+    def add_command(self, command: Command):
+        if self.get_command(command.name):
+            self.fail(f"'{command.name}' already registered")
+        command.raise_exceptions = self.raise_exceptions
+        self.commands.append(command)
+    
+    def get_command(self, name: str) -> Command:
+        for command in self.commands:
+            if command.name == name:
+                return command
+        return None
 
-        result = self._usage()
+    def fail(self, message: str):
+        if self.raise_exceptions:
+            raise ParseException(message)
+        else:
+            print(self.usage_text())
+            print(message)
+            exit(1)
+    
+    def help(self) -> str:
+        if len(self.commands) == 1:
+            return self.commands[0].help(root=True)
 
-        result += f"\n\ndescription\n  {self.description}"
+        result = self.usage()
+
+        if self.description:
+            result += f"\n\ndescription\n  {self.description}"
 
         result += f"\n\nflags\n  --help  -h  displays this message"
 
-        if self._commands:
+        # Enumerate commands
+        if self.commands:
             command_table = []
-            for command in self._commands:
+            for command in self.commands:
                 command_table.append([command.name, command.description])
             commands = table_serialize(command_table, "  ", "\n  ")
             result += f"\n\ncommands\n  {commands}"
         
         return result
-    
-    def _usage(self) -> str:
-        """ Creates a usage message for the parser
 
-        Returns
-        -------
-        usage: the usage message
-        """
+    def usage(self) -> str:
+        if len(self.commands) == 1:
+            return self.commands[0].usage(root=True)
 
         result = f"usage\n  {self.name} [--help]"
 
-        if self._commands:
+        # Enumerate commands
+        if self.commands:
             command_names = []
-            for command in self._commands:
+            for command in self.commands:
                 command_names.append(command.name)
             commands = ", ".join(command_names)
             result += f" {{{commands}}} ..."
         
         return result
-    
-    def _fail(self, message: str):
-        """ Prints usage and an error message """
 
-        print(f"{self._usage()}\n\n{message}")
-    
-    def _get_command(self, name: str):
-        """ Gets a command
-        
-        Arguments
-        ---------
-        name: the command's name
-        
-        Returns
-        -------
-        command: the command, or None if one couldn't be found
-        """
-        
-        for command in self._commands:
-            if command.name == name:
-                return command
-        return None
-
-    def command(self, description: str, name: str = None, **arguments):
-        """ Wrapper for registering commands
-
-        Registers the command with the parser
-        
-        Arguments
-        ---------
-        description: some information about the command
-        arguments: definitions for each argument
-        """
-        
-        def wrapper(functor: callable):
-
-            # Add the command
-            command = Command(description, 
-                    self.name,
-                    functor, 
-                    arguments,
-                    command_name=name)
-            self._commands.append(command)
-            return functor
-            
-        return wrapper
-    
     def run(self, arguments: list) -> any:
-        """ Runs the parser
-        
-        Finds the relevant command, or maybe prints a help message
-        
-        Arguments
-        ---------
-        arguments: the command line arguments
-        
-        Returns
-        -------
-        result: whatever the command returns 
-        
-        Usage
-        -----
-        
-        ```
-        >>> parser = Parser("parser", "a parser")
-        >>> parser.run(sys.argv[1:])
-        None
-        ```
-        """
 
+        # Check arguments non-empty
+        for argument in arguments:
+            if not argument:
+                self.fail("empty argument")
+
+        # Check command(s) registered
+        command_count = len(self.commands)
+        if not self.commands:
+            raise Exception("no registered commands")
+
+        # Given just 1 command, run it right away
+        command = None
+        if command_count == 1:
+            return self.commands[0].run(arguments, root=True)
+
+        # Given options, at least one argument (command name) needed
         if not arguments:
-            return self._fail("expected a command")
+            self.fail("expected a command")
         
-        # Check for help
+        # Handle help; check no trailing garbage
         command_name = arguments[0]
         if command_name == "--help" or command_name == "-h":
-            if len(arguments) != 1:
-                return self._fail(f"'{command_name}' expects no arguments")
-            
-            print(self._help())
-            return None
+            if command_count > 1:
+                self.fail(f"'{command_name}' followed by other arguments")
+            else:
+                return self.help()
         
-        # Make sure command it's a potential command
-        elif command_name[0] == '-':
-            return self._fail(f"unexpected flag '{command_name}'")
+        # Check command name (not flag) given
+        if command_name[0] == "-":
+            self.fail(f"expected command, not '{command_name}'")
         
-        # Fetch command
-        command_name = command_name
-        command = self._get_command(command_name)
+        # Find command
+        command = self.get_command(command_name)
         if not command:
-            return self._fail(f"unrecognized command '{command_name}'")
-        
-        return command._parse(arguments[1:])
-        
+            self.fail(f"unrecognized command '{command_name}'")
+            
+        # Trim command name, run command
+        arguments = arguments[1:]
+        return command.run(arguments)

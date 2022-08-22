@@ -1,35 +1,5 @@
-def serialize(table: list, 
-        delimiter: str = " ", 
-        newline: str = "\n") -> str:
-    
-    ''' Spaces columns of a 2D array ("table") 
-    
-    Arguments
-    ---------
-    table: the table to format
-    delimiter: string between each column
-    newline: string between each row
-    
-    Returns
-    -------
-    table: the formatted table
+def serialize(table: list, delimiter = " ", newline = "\n") -> str:
 
-    Usage
-    -----
-
-    ```
-    >>> table = [
-    ...     ["the", "quick", "brown"],
-    ...     ["fox", "jumped", "over"],
-    ...     ["the", "lazy", "dog"],
-    ... ]
-    >>> print(serialize(table))
-    the quick  brown
-    fox jumped over
-    the lazy   dog
-    ```
-    '''
-    
     # Evaluate shape
     row_count = len(table)
     if row_count == 0:
@@ -38,7 +8,9 @@ def serialize(table: list,
 
     # Calculate max column widths
     widths = [0] * column_count
-    for row in table:
+    last_columns = [0] * row_count
+    for row_index in range(row_count):
+        row = table[row_index]
 
         if len(row) != column_count:
             raise Exception("inconsistent table shape")
@@ -46,24 +18,36 @@ def serialize(table: list,
         for column_index in range(column_count):
 
             value = row[column_index]
-            width = widths[column_index]
-            widths[column_index] = max(width, len(value))
+            if not isinstance(value, str):
+                raise Exception("table contains non-string value")
+
+            column_width = widths[column_index]
+            value_width = len(value)
+            widths[column_index] = max(column_width, value_width)
+
+            if value_width:
+                last_columns[row_index] = column_index
     
     # Pad values, serialize result
     rows = []
-    for row in table:
+    for row_index in range(row_count):
 
         columns = []
         for column_index in range(column_count):
-            value = row[column_index]
+
+            # Skip the row if there are no values
+            if widths[column_index] == 0:
+                continue
+
+            value = table[row_index][column_index]
             width = len(value)
 
             padding = ""
-            if column_index + 1 < column_count:
+            last_column_index = last_columns[row_index]
+            if column_index < last_column_index:
                 padding = " " * (widths[column_index] - width)
-            columns.append(value + padding)
+            if column_index <= last_column_index:
+                columns.append(f"{value}{padding}")
                 
         rows.append(delimiter.join(columns))
-    
     return newline.join(rows)
-    
