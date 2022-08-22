@@ -163,7 +163,8 @@ class Command:
         if arguments and (arguments[0] == "--help" or arguments[0] == "-h"):
             if len(arguments) != 1:
                 self.fail(f"'{arguments[0]}' followed by other arguments")
-            return self.help(root=root)
+            print(self.help(root=root))
+            return
 
         parameter_index = 0
         parameter_count = len(self.parameters)

@@ -11,88 +11,55 @@
 
 Every CLI application wants two things:
 
-1. Vetted user input
+1. Sanitized user input
 2. Descriptive usage and help messages
 
-Amersham takes care of both with minimal boilerplate.
-
-## Examples
-
-Amersham generates descriptive help messages, so you don't have to.
-
-For the application:
-
-```
-user:app$ python3 app.py --help
-usage
-  app [--help] {command} ...
-
-description
-  a parser
-
-commands
-  command  a command
-```
-
-And for each command:
-
-```
-user:app$ python3 app.py command --help
-usage
-  app command [--help] {command} ...
-
-description
-  a command
-
-flags
-  --help  -h  displays this message
-  --flag  -f  a flag
-
-parameters
-  parameter  a parameter
-```
-
-## Installation
-
-```
-user:app$ pip3 install amersham
-```
+Amersham implements both with minimal boilerplate.
 
 ## Quick Start
 
+Install
+
+```
+pip3 install amersham
+```
+
 Import
 
-``` python
+```
 import sys
 
-from amersham import Parser, Flag, Parameter
+from amersham import Parser
 ```
 
-Create a parser
+Create a parser and command
 
-``` python
-parser = Parser("parser", "a parser")
 ```
+parser = Parser("app")
 
-Create a command
-
-``` python
-@parser.command("a command",
-        flag = Flag("a flag"),
-        parameter = Parameter("a parameter"))
-def command(parameter: str, flag: str):
-    print(parameter, flag)
+@parser.command()
+def command(parameter, flag = None):
+    pass
 ```
 
 Run the parser
 
-``` python
+```
 if __name__ == "__main__":
     parser.run(sys.argv[1:])
 ```
 
-# Future Improvements
+Run your program
 
-- [ ] Type validation for `bool`, `int`, `str`, `list`, and file-like objects
-- [ ] Condensed usage and help messages for single-command parsers
-- [ ] Improved instance hints for `list` flags
+```
+user:~$ python3 app.py --help
+usage
+  app.py [--help] [--flag] PARAMETER
+
+flags
+  --help  -h  displays this message
+  --flag
+
+parameters
+  PARAMETER  string
+```

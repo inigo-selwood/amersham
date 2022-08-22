@@ -52,7 +52,7 @@ class Parser:
         if self.raise_exceptions:
             raise ParseException(message)
         else:
-            print(self.usage_text())
+            print(self.usage())
             print(message)
             exit(1)
     
@@ -116,11 +116,13 @@ class Parser:
         
         # Handle help; check no trailing garbage
         command_name = arguments[0]
+        argument_count = len(arguments)
         if command_name == "--help" or command_name == "-h":
-            if command_count > 1:
+            if argument_count > 1:
                 self.fail(f"'{command_name}' followed by other arguments")
             else:
-                return self.help()
+                print(self.help())
+                return None
         
         # Check command name (not flag) given
         if command_name[0] == "-":
