@@ -23,6 +23,26 @@ class Parameter:
     
     @staticmethod
     def construct(signature: inspect.Parameter, overrides: dict) -> Parameter:
+        ''' Constructs a parameter from a function's argument signature
+        
+        Arguments
+        ---------
+        signature: inspect.Parameter
+            the argument's signature information
+        overrides: dict
+            optional overrides for the parameter
+        
+        Returns
+        -------
+        parameter: Parameter
+            the constructed parameter
+        
+        Raises
+        ------
+        exception: Exception
+            if there was some configuration problem
+        '''
+
         name = overrides["name"] if "name" in overrides else signature.name
 
         # Evaluate type

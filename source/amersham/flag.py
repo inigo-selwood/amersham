@@ -31,6 +31,25 @@ class Flag:
     
     @staticmethod
     def construct(signature: inspect.Parameter, overrides: dict) -> Flag:
+        ''' Creates a flag from a function signature's argument
+        
+        Arguments
+        ---------
+        signature: inspect.Parameter
+            the argument's signature
+        overrides: dict
+            any optional overrides for the flag
+        
+        Returns
+        -------
+        flag: Flag
+            the constructed flag
+        
+        Raises
+        ------
+        exception: Exception
+            if there was some configuration problem
+        '''
 
         name = overrides["name"] if "name" in overrides else signature.name
 
@@ -57,6 +76,23 @@ class Flag:
     
     @staticmethod
     def parse(flag: str) -> tuple:
+        ''' Parses a flag, as present in CLI input
+        
+        Arguments
+        ---------
+        flag: str
+            the flag string representation
+        
+        Returns
+        -------
+        name, is_alias, value: tuple[str, bool, str]
+            The flag's fields
+        
+        Raises
+        ------
+        parse_exception: ParseException
+            if the flag was formatted wrong
+        '''
 
         # Split tokens, check count valid
         tokens = flag.split('=')

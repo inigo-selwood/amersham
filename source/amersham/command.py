@@ -16,7 +16,6 @@ class Command:
             parser_name: str,
             name: str,
             description: str = "", 
-            help_callback: callable = None,
             raise_exceptions = False):
         
         name = name.replace(" ", "-")
@@ -29,7 +28,6 @@ class Command:
         self.canonical_name = callback.__name__
 
         self.description = description
-        self.help_callback = help_callback if help_callback else Command.help
         self.raise_exceptions = raise_exceptions
 
         self.flags = []
@@ -38,11 +36,42 @@ class Command:
     @staticmethod
     def construct(functor: callable, 
             parser_name: str,
-            overrides: dict,
+            overrides = {},
             name = "", 
             description = "",
-            help_callback: callable = None,
             raise_exceptions = False) -> Command:
+        
+        ''' Creates a command from a functor
+
+        Reads signature information to construct a command, with optional
+        overrides
+
+        Arguments
+        ---------
+        functor: callable
+            the command function to construct from
+        parser_name: str
+            the name of the command's parser's name
+        overrides: dict
+            optional overrides for the parser's arguments
+        name: str
+            override for the command's name
+        description: str
+            a short description of the command
+        raise_exceptions: bool
+            a flag for testing; prevents the command from printing errors and 
+            quitting
+        
+        Returns
+        -------
+        command: Command
+            the command generated
+        
+        Raises
+        ------
+        exception: Exception
+            if you've messed up somehow
+        '''
         
         command_name = name if name else functor.__name__
 
@@ -50,7 +79,6 @@ class Command:
                 parser_name, 
                 command_name,
                 description=description,
-                help_callback=help_callback,
                 raise_exceptions=raise_exceptions)
 
         parameters = inspect.signature(functor).parameters
@@ -70,6 +98,19 @@ class Command:
         return command
     
     def add_flag(self, new_flag: Flag):
+        ''' Adds a flag to the command
+        
+        Arguments
+        ---------
+        new_flag: Flag
+            the flag to add
+        
+        Raises
+        ------
+        exception: Exception
+            if the flag's name or alias are already present in the command
+        '''
+
         for flag in self.flags:
 
             identifier = ""
@@ -83,6 +124,19 @@ class Command:
         self.flags.append(new_flag)
 
     def add_parameter(self, new_parameter: Parameter):
+        ''' Adds a parameter
+        
+        Arguments
+        ---------
+        new_parameter: Parameter
+            the parameter to add
+        
+        Raises
+        ------
+        exception: Exception
+            if the command's name is already registered
+        '''
+
         for parameter in self.parameters:
             if parameter.name != new_parameter.name:
                 continue
@@ -92,6 +146,22 @@ class Command:
         self.parameters.append(new_parameter)
     
     def get_flag(self, name: str, alias: bool) -> Flag:
+        ''' Fetches a flag of a given name, alias or long-form
+        
+        Arguments
+        ---------
+        name: str
+            the name of the flag to fetch
+        alias: bool
+            if the name is an alias, not long-form
+        
+        Returns
+        -------
+        flag: Flag
+            the fetched flag, or None if one with a matching name/alias 
+            couldn't be found
+        '''
+
         for flag in self.flags:
             if ((alias and name == flag.alias) or 
                     (not alias and name == flag.name)):
@@ -99,6 +169,20 @@ class Command:
         return None
 
     def fail(self, message: str):
+        ''' Fails when an input exception occurs
+        
+        Arguments
+        ---------
+        message: str
+            the message to print
+        
+        Raises
+        ------
+        exception: ParseException
+            if the raise exception flag is set; helps in testing, or cases
+            where the user wants to handle exceptions themselves
+        '''
+
         if self.raise_exceptions:
             raise ParseException(message)
         else:
@@ -107,6 +191,19 @@ class Command:
             exit(1)
 
     def help(self, root: bool = False) -> str:
+        ''' Serializes an informative help message
+        
+        Arguments
+        ---------
+        root: bool
+            if this command is the only one registered with the parser
+        
+        Returns
+        -------
+        help: str
+            the help message
+        '''
+
         result = self.usage(root=root)
 
         if self.description:
@@ -142,6 +239,18 @@ class Command:
         return result
 
     def usage(self, root: bool = False) -> str:
+        ''' Prints command usage information
+        
+        Arguments
+        ---------
+        root: bool
+            if the command is the only one registered with the parser
+        
+        Returns
+        -------
+        usage: str
+            the usage message
+        '''
 
         path = "" if root else f" {self.name}"
         result = f"usage\n  {self.parser_name}{path} [--help]"
@@ -158,6 +267,31 @@ class Command:
         return result
 
     def run(self, arguments: list, root: bool = False) -> any:
+        ''' Runs the command
+
+        Takes user CLI input and formats its flags and parameters into
+        something usable by the command callback
+        
+        Arguments
+        ---------
+        arguments: list
+            the arguments (stripped of path directory and command name if 
+            present
+        root: bool
+            if this is the only command registed with the parser
+        
+        Returns
+        -------
+        result: any
+            whatever the command's callback returns
+        
+        Raises
+        ------
+        parse_error: ParseException
+            if the user's input was wrong, somehow
+        error: Exception
+            if the parser was set-up incorrectly
+        '''
 
         # Check for help
         if arguments and (arguments[0] == "--help" or arguments[0] == "-h"):

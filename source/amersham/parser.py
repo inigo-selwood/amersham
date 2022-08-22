@@ -20,9 +20,35 @@ class Parser:
     def command(self, 
             name = "", 
             description = "", 
-            help_callback: callable = None,
             raise_exceptions = False,
             **overrides) -> callable:
+        ''' Decorator for registering a command with the parser
+        
+        Reads the signature of a function to generate a command object, with
+        some optional overrides
+        
+        Arguments
+        ---------
+        name: str
+            an override for the function's name
+        description: str
+            a short overview of the command's purpose
+        raise_exceptions: bool
+            set this value if you want the parser to fail silently, passing
+            user input exceptions back for you to handle yourself
+        overrides: dict
+            optional overrides for the command's arguments
+        
+        Returns
+        -------
+        command: callable
+            the generated command
+        
+        Raises
+        ------
+        exception: Exception
+            if there was some configuration error
+        '''
         
         def wrapper(functor: callable) -> callable:
             command = Command.construct(functor, 
@@ -37,18 +63,58 @@ class Parser:
         return wrapper
     
     def add_command(self, command: Command):
+        ''' Adds a command
+        
+        Arguments
+        ---------
+        command: Command
+            the command to add
+        
+        Raises
+        ------
+        exception: Exception
+            if you messed up somehow with the command
+        '''
+
         if self.get_command(command.name):
-            self.fail(f"'{command.name}' already registered")
+            raise Exception(f"'{command.name}' already registered")
         command.raise_exceptions = self.raise_exceptions
         self.commands.append(command)
     
     def get_command(self, name: str) -> Command:
+        ''' Gets a command of a given name
+        
+        Arguments
+        ---------
+        name: str
+            the name of the command to fetch
+            
+        Returns
+        -------
+        command: Command
+            the fetched command, or None if there was no match
+        '''
+
         for command in self.commands:
             if command.name == name:
                 return command
         return None
 
     def fail(self, message: str):
+        ''' Fails when an input exception occurs
+        
+        Arguments
+        ---------
+        message: str
+            the message to print
+        
+        Raises
+        ------
+        exception: ParseException
+            if the raise exception flag is set; helps in testing, or cases
+            where the user wants to handle exceptions themselves
+        '''
+
         if self.raise_exceptions:
             raise ParseException(message)
         else:
@@ -57,6 +123,14 @@ class Parser:
             exit(1)
     
     def help(self) -> str:
+        ''' Serializes an informative help message
+        
+        Returns
+        -------
+        help: str
+            the help message
+        '''
+
         if len(self.commands) == 1:
             return self.commands[0].help(root=True)
 
@@ -78,6 +152,14 @@ class Parser:
         return result
 
     def usage(self) -> str:
+        ''' Prints parser usage information
+    
+        Returns
+        -------
+        usage: str
+            the usage message
+        '''
+
         if len(self.commands) == 1:
             return self.commands[0].usage(root=True)
 
@@ -94,6 +176,29 @@ class Parser:
         return result
 
     def run(self, arguments: list) -> any:
+        ''' Runs the parser
+
+        Takes user CLI input and formats its flags and parameters into
+        something usable by the command callback; finds the relevant command
+        (or delegates directly if only one exists)
+        
+        Arguments
+        ---------
+        arguments: list
+            the arguments (stripped of path directory)
+        
+        Returns
+        -------
+        result: any
+            whatever the command's callback returns
+        
+        Raises
+        ------
+        parse_error: ParseException
+            if the user's input was wrong, somehow
+        error: Exception
+            if the parser was set-up incorrectly
+        '''
 
         # Check arguments non-empty
         for argument in arguments:

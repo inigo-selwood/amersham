@@ -1,4 +1,28 @@
 def serialize(table: list, delimiter = " ", newline = "\n") -> str:
+    ''' Serializes a table, spacing columns evenly
+
+    - Ignores empty columns
+    - Spaces columns evenly
+    
+    Arguments
+    ---------
+    table: list
+        the table to serialize
+    delimiter: str
+        token between each column
+    newline: str
+        token between each line
+    
+    Returns
+    -------
+    table: str
+        the serialized table
+    
+    Raises
+    ------
+    exception: Exception
+        if there was a table formatting error
+    '''
 
     # Evaluate shape
     row_count = len(table)
