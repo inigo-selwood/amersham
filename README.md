@@ -26,7 +26,7 @@ pip3 install amersham
 
 Import
 
-```
+```python
 import sys
 
 from amersham import Parser
@@ -34,7 +34,7 @@ from amersham import Parser
 
 Create a parser and command
 
-```
+```python
 parser = Parser("app")
 
 @parser.command()
@@ -44,7 +44,7 @@ def command(parameter, flag = None):
 
 Run the parser
 
-```
+```python
 if __name__ == "__main__":
     parser.run(sys.argv[1:])
 ```
